@@ -23,11 +23,9 @@ namespace WebAPI.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // 1. Tüm Kitapları Listele
         [HttpGet("getall")]
         public IActionResult GetAll() => Ok(_bookService.GetAll());
 
-        // 2. ID'ye Göre Getir (Edit Sayfası İçin)
         [HttpGet("getbyid/{id}")]
         public IActionResult GetById(int id)
         {
@@ -36,7 +34,6 @@ namespace WebAPI.Controllers
             return Ok(result);
         }
 
-        // 3. Yeni Kitap Ekle (Resim Destekli)
         [HttpPost("add")]
         public async Task<IActionResult> Add([FromForm] BookAddDto bookDto)
         {
@@ -61,7 +58,6 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Eser başarıyla eklendi." });
         }
 
-        // 4. Kitap Güncelle (Resim ve Bilgi Güncelleme)
         [HttpPut("update")]
         public async Task<IActionResult> Update([FromForm] BookUpdateDto bookDto)
         {
@@ -82,7 +78,6 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Eser başarıyla güncellendi." });
         }
 
-        // 5. Kitabı Ödünç Ver (Öğrenci ID ve İsim Kaydı)
         [HttpPost("borrow/{id}")]
         public IActionResult Borrow(int id, [FromBody] BorrowRequest request)
         {
@@ -97,7 +92,6 @@ namespace WebAPI.Controllers
             }
         }
 
-        // 6. Kitabı İade Al
         [HttpPost("return/{id}")]
         public IActionResult Return(int id)
         {
@@ -105,7 +99,6 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Kitap iade alındı." });
         }
 
-        // 7. Kitabı Sil (Ödünçteyse Engel Koyar)
         [HttpDelete("delete/{id}")]
         public IActionResult Delete(int id)
         {
@@ -119,12 +112,10 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Business katmanından gelen "Ödünçte silinemez" uyarısını döner
                 return BadRequest(new { message = ex.Message });
             }
         }
 
-        // --- YARDIMCI METOD: Resim Kaydetme ---
         private async Task<string> SaveImage(IFormFile image)
         {
             string wwwrootPath = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
@@ -144,7 +135,6 @@ namespace WebAPI.Controllers
         }
     }
 
-    // --- TAŞIYICI SINIFLAR (DTOs) ---
 
     public class BorrowRequest
     {

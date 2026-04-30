@@ -11,7 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// --- DEPENDENCY INJECTION (Baðýmlýlýklar) ---
 // Kitaplar
 builder.Services.AddScoped<Business.Abstract.IBookService, Business.Concrete.BookManager>();
 builder.Services.AddScoped<DataAccess.Abstract.IBookDal, DataAccess.Concrete.EntityFramework.EfBookDal>();
@@ -28,7 +27,6 @@ builder.Services.AddScoped<DataAccess.Abstract.IReservationDal, DataAccess.Concr
 builder.Services.AddScoped<Business.Abstract.IAuthService, Business.Concrete.AuthManager>();
 builder.Services.AddScoped<Core.Utilities.Security.JWT.ITokenHelper, Core.Utilities.Security.JWT.JwtHelper>();
 
-// SWAGGER'I SADECE BÝR KERE VE TERTEMÝZ EKLÝYORUZ
 builder.Services.AddSwaggerGen();
 
 // --- JWT KÝMLÝK DOÐRULAMA AYARLARI ---
@@ -47,7 +45,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// --- CORS AYARLARI (Her yere açýk) ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>

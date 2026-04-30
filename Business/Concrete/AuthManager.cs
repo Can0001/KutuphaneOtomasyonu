@@ -8,7 +8,7 @@ namespace Business.Concrete
     public class AuthManager : IAuthService
     {
         private readonly IUserService _userService;
-        private readonly ITokenHelper _tokenHelper; // Token üreticimizi çağırıyoruz
+        private readonly ITokenHelper _tokenHelper; 
 
         public AuthManager(IUserService userService, ITokenHelper tokenHelper)
         {
@@ -47,7 +47,7 @@ namespace Business.Concrete
                 throw new Exception("Şifre hatalı!");
             }
 
-            // Şifre doğruysa, kullanıcının bilgileriyle yepyeni bir Token üretip gönderiyoruz!
+            
             return _tokenHelper.CreateToken(
                 userToCheck.Id.ToString(),
                 userToCheck.Email,

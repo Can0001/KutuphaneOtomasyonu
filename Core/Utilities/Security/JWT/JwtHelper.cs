@@ -9,7 +9,6 @@ namespace Core.Utilities.Security.JWT
     {
         public AccessToken CreateToken(string id, string email, string role, string name)
         {
-            // 1. Kartın içine dışarıdan gelen bilgileri gömüyoruz
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, id),

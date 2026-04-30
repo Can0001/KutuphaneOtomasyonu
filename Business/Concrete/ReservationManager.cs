@@ -15,7 +15,6 @@ namespace Business.Concrete
 
         public void Add(Reservation reservation)
         {
-            // İleride buraya "Kitap başkasındaysa ödünç verilemez" gibi kurallar yazacağız.
             _reservationDal.Add(reservation);
         }
 

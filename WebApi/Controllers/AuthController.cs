@@ -18,7 +18,6 @@ namespace WebApi.Controllers
         [HttpPost("register")]
         public IActionResult Register(UserForRegisterDto userForRegisterDto)
         {
-            // Önce bu email daha önce alınmış mı kontrol et
             if (_authService.UserExists(userForRegisterDto.Email))
             {
                 return BadRequest("Bbu email zaten sistemde var!");
@@ -33,9 +32,8 @@ namespace WebApi.Controllers
         {
             try
             {
-                // Artık Login metodu bize bir AccessToken (Sanal Kart) veriyor
                 var token = _authService.Login(userForLoginDto);
-                return Ok(token); // Bu kartı doğrudan ekrana basıyoruz
+                return Ok(token);
             }
             catch (Exception ex)
             {
