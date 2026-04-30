@@ -1,0 +1,39 @@
+﻿using Business.Abstract;
+using Entities.Concrete;
+using Microsoft.AspNetCore.Mvc;
+
+namespace WebApi.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class UsersController : ControllerBase
+    {
+        private readonly IUserService _userService;
+
+        public UsersController(IUserService userService)
+        {
+            _userService = userService;
+        }
+
+        [HttpGet("getall")]
+        public IActionResult GetAll()
+        {
+            var result = _userService.GetAll();
+            return Ok(result);
+        }
+
+        [HttpPost("add")]
+        public IActionResult Add(User user)
+        {
+            _userService.Add(user);
+            return Ok("Kullanıcı başarıyla sisteme eklendi!");
+        }
+
+        [HttpGet("getstudents")]
+        public IActionResult GetStudents()
+        {
+            var students = _userService.GetAll().Where(u => u.Role == "Ogrenci").ToList();
+            return Ok(students);
+        }
+    }
+}
