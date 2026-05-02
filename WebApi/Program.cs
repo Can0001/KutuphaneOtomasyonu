@@ -5,29 +5,42 @@ using Business.Abstract;
 using Business.Concrete;
 using DataAccess.Abstract;
 using DataAccess.Concrete.EntityFramework;
+using Core.Utilities.Security.JWT;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Kitaplar
-builder.Services.AddScoped<Business.Abstract.IBookService, Business.Concrete.BookManager>();
-builder.Services.AddScoped<DataAccess.Abstract.IBookDal, DataAccess.Concrete.EntityFramework.EfBookDal>();
+builder.Services.AddScoped<IBookService, BookManager>();
+builder.Services.AddScoped<IBookDal, EfBookDal>();
 
 // Kullanýcýlar
-builder.Services.AddScoped<Business.Abstract.IUserService, Business.Concrete.UserManager>();
-builder.Services.AddScoped<DataAccess.Abstract.IUserDal, DataAccess.Concrete.EntityFramework.EfUserDal>();
+builder.Services.AddScoped<IUserService, UserManager>();
+builder.Services.AddScoped<IUserDal, EfUserDal>();
 
 // Rezervasyonlar
-builder.Services.AddScoped<Business.Abstract.IReservationService, Business.Concrete.ReservationManager>();
-builder.Services.AddScoped<DataAccess.Abstract.IReservationDal, DataAccess.Concrete.EntityFramework.EfReservationDal>();
+builder.Services.AddScoped<IReservationService, ReservationManager>();
+builder.Services.AddScoped<IReservationDal, EfReservationDal>();
 
 // Auth ve Token
-builder.Services.AddScoped<Business.Abstract.IAuthService, Business.Concrete.AuthManager>();
-builder.Services.AddScoped<Core.Utilities.Security.JWT.ITokenHelper, Core.Utilities.Security.JWT.JwtHelper>();
+builder.Services.AddScoped<IAuthService, AuthManager>();
+builder.Services.AddScoped<ITokenHelper, JwtHelper>();
 
-builder.Services.AddSwaggerGen();
+// --- ADMIN PANELI VE ENVANTER BAÐIMLILIKLARI ---
+builder.Services.AddScoped<IStaffService, StaffManager>();
+builder.Services.AddScoped<IStaffDal, EfStaffDal>();
+
+builder.Services.AddScoped<IStudentService, StudentManager>();
+builder.Services.AddScoped<IStudentDal, EfStudentDal>();
+
+builder.Services.AddScoped<ICategoryService, CategoryManager>();
+builder.Services.AddScoped<ICategoryDal, EfCategoryDal>();
+
+builder.Services.AddScoped<IBookTransactionService, BookTransactionManager>();
+builder.Services.AddScoped<IBookTransactionDal, EfBookTransactionDal>();
 
 // --- JWT KÝMLÝK DOÐRULAMA AYARLARI ---
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -64,13 +77,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles(); // wwwroot klasörünü eriþime açar
-
 app.UseHttpsRedirection();
 
-// --- GÜVENLÝK DUVARI SIRALAMASI (Burasý Hayati Önem Taþýr) ---
-app.UseCors("AllowAll"); // Önce kapýyý açýyoruz
-app.UseAuthentication(); // Sonra kimlik soruyoruz
-app.UseAuthorization();  // Sonra yetkisine bakýyoruz
+app.UseCors("AllowAll"); 
+app.UseAuthentication(); 
+app.UseAuthorization();  
 
 app.MapControllers();
 

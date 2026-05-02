@@ -12,9 +12,9 @@ namespace Core.DataAccess.EntityFramework
         {
             using (TContext context = new TContext())
             {
-                var addedEntity = context.Entry(entity); // Referansı yakala
-                addedEntity.State = EntityState.Added; // Durumunu "Eklenecek" olarak işaretle
-                context.SaveChanges(); // Kaydet
+                var addedEntity = context.Entry(entity);
+                addedEntity.State = EntityState.Added; 
+                context.SaveChanges(); 
             }
         }
 
@@ -23,7 +23,7 @@ namespace Core.DataAccess.EntityFramework
             using (TContext context = new TContext())
             {
                 var deletedEntity = context.Entry(entity);
-                deletedEntity.State = EntityState.Deleted; // Durumunu "Silinecek" olarak işaretle
+                deletedEntity.State = EntityState.Deleted; 
                 context.SaveChanges();
             }
         }
@@ -33,7 +33,7 @@ namespace Core.DataAccess.EntityFramework
             using (TContext context = new TContext())
             {
                 var updatedEntity = context.Entry(entity);
-                updatedEntity.State = EntityState.Modified; // Durumunu "Güncellenecek" olarak işaretle
+                updatedEntity.State = EntityState.Modified; 
                 context.SaveChanges();
             }
         }
@@ -42,7 +42,7 @@ namespace Core.DataAccess.EntityFramework
         {
             using (TContext context = new TContext())
             {
-                return context.Set<TEntity>().SingleOrDefault(filter); // Tek bir kayıt bul ve getir
+                return context.Set<TEntity>().SingleOrDefault(filter); 
             }
         }
 
@@ -50,7 +50,6 @@ namespace Core.DataAccess.EntityFramework
         {
             using (TContext context = new TContext())
             {
-                // Filtre verilmemişse hepsini getir, verilmişse filtreye uyanları getir
                 return filter == null
                     ? context.Set<TEntity>().ToList()
                     : context.Set<TEntity>().Where(filter).ToList();
