@@ -10,5 +10,7 @@ namespace Business.Abstract
         void Add(User user);
         void Update(User user);
         void Delete(User user);
+        User GetByMail(string email);
+        List<User> GetAllByRole(string role);
     }
 }

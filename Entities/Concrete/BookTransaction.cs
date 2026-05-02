@@ -1,19 +1,19 @@
 ﻿using Core.Entities;
 using System;
 
-namespace KutüphaneOtomasyonu.Entities.Concrete
+namespace Entities.Concrete
 {
+    // Kendi sistemindeki interface adı neyse onu tut (IEntity vb.)
     public class BookTransaction : IEntity
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
         public int BookId { get; set; }
-        public int StudentId { get; set; } 
-        public int StaffId { get; set; }
 
-        public DateTime BorrowDate { get; set; } = DateTime.Now; 
-        public DateTime DueDate { get; set; }
-        public DateTime? ReturnDate { get; set; } 
+        public DateTime TransactionDate { get; set; } = DateTime.Now;
 
-        public string Status { get; set; }
+        public DateTime? ReturnDate { get; set; }
+
+        public string Status { get; set; } = string.Empty;
     }
 }

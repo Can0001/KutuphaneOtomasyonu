@@ -15,8 +15,6 @@ namespace DataAccess.Contexts
         public DbSet<Book> Books { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
 
-        public DbSet<Staff> Staffs { get; set; }
-        public DbSet<Student> Students { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<BookTransaction> BookTransactions { get; set; }
     }

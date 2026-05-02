@@ -11,5 +11,10 @@ namespace Business.Abstract
         void Add(BookTransaction bookTransaction);
         void Update(BookTransaction bookTransaction);
         void Delete(BookTransaction bookTransaction);
+
+        List<BookTransaction> GetPendingRequests();
+        void RequestBook(BookTransaction bookTransaction);
+        void ApproveRequest(int transactionId);
+        void RejectRequest(int transactionId);
     }
 }

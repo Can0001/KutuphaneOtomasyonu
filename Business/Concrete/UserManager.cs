@@ -38,9 +38,20 @@ namespace Business.Concrete
             return _userDal.Get(u => u.Id == id);
         }
 
+
         public void Update(User user)
         {
             _userDal.Update(user);
+        }
+
+        public User GetByMail(string email)
+        {
+            return _userDal.Get(u => u.Email == email);
+        }
+
+        public List<User> GetAllByRole(string role)
+        {
+            return _userDal.GetAll(u => u.Role == role);
         }
     }
 }

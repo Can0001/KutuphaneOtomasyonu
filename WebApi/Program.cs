@@ -29,13 +29,6 @@ builder.Services.AddScoped<IReservationDal, EfReservationDal>();
 builder.Services.AddScoped<IAuthService, AuthManager>();
 builder.Services.AddScoped<ITokenHelper, JwtHelper>();
 
-// --- ADMIN PANELI VE ENVANTER BAÐIMLILIKLARI ---
-builder.Services.AddScoped<IStaffService, StaffManager>();
-builder.Services.AddScoped<IStaffDal, EfStaffDal>();
-
-builder.Services.AddScoped<IStudentService, StudentManager>();
-builder.Services.AddScoped<IStudentDal, EfStudentDal>();
-
 builder.Services.AddScoped<ICategoryService, CategoryManager>();
 builder.Services.AddScoped<ICategoryDal, EfCategoryDal>();
 
