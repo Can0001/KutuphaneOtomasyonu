@@ -33,6 +33,9 @@ builder.Services.AddScoped<ICategoryDal, EfCategoryDal>();
 builder.Services.AddScoped<IBookTransactionService, BookTransactionManager>();
 builder.Services.AddScoped<IBookTransactionDal, EfBookTransactionDal>();
 
+// Mail Servisi
+builder.Services.AddScoped<IEmailService, EmailManager>();
+
 // Geciken kitaplarý her gün otomatik kontrol eden robotumuz
 builder.Services.AddHostedService<OverdueService>();
 

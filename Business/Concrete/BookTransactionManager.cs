@@ -10,10 +10,14 @@ namespace Business.Concrete
     public class BookTransactionManager : IBookTransactionService
     {
         private readonly IBookTransactionDal _bookTransactionDal;
+        private readonly IBookDal _bookDal;
+        private readonly IUserService _userService;
 
-        public BookTransactionManager(IBookTransactionDal bookTransactionDal)
+        public BookTransactionManager(IBookTransactionDal bookTransactionDal, IBookDal bookDal, IUserService userService)
         {
             _bookTransactionDal = bookTransactionDal;
+            _bookDal = bookDal;
+            _userService = userService;
         }
 
         public List<BookTransaction> GetAll()
@@ -48,6 +52,12 @@ namespace Business.Concrete
 
         public void RequestBook(BookTransaction bookTransaction)
         {
+            var book = _bookDal.Get(b => b.Id == bookTransaction.BookId);
+            if (book != null && book.Status == false)
+            {
+                throw new Exception("Hata: Bu kitap şu an kullanım dışı (pasif) olduğu için talep edilemez!");
+            }
+
             var isAlreadyActive = _bookTransactionDal.Get(t =>
                 t.UserId == bookTransaction.UserId &&
                 t.BookId == bookTransaction.BookId &&
@@ -59,14 +69,23 @@ namespace Business.Concrete
                 throw new Exception("Bu kitap için zaten onay bekleyen bir talebiniz veya aktif olarak ödünç aldığınız bir kaydınız var!");
             }
 
+            var user = _userService.GetById(bookTransaction.UserId);
+            int maxLimit = 5; 
+
+            if (user != null)
+            {
+                if (user.TrustScore >= 100) maxLimit = 10; 
+                else if (user.TrustScore >= 50) maxLimit = 7; 
+            }
+
             var currentBookCount = _bookTransactionDal.GetAll(t =>
                 t.UserId == bookTransaction.UserId &&
                 (t.Status == "Pending" || t.Status == "Approved" || t.Status == "Overdue")
             ).Count;
 
-            if (currentBookCount >= 5)
+            if (currentBookCount >= maxLimit)
             {
-                throw new Exception("Limit doldu! Aynı anda en fazla 5 kitap talebinde bulunabilir veya ödünç alabilirsiniz.");
+                throw new Exception($"Limit doldu! Güven puanınıza göre aynı anda en fazla {maxLimit} kitap talebinde bulunabilir veya ödünç alabilirsiniz.");
             }
 
             bookTransaction.Status = "Pending";
@@ -79,14 +98,29 @@ namespace Business.Concrete
             var transaction = _bookTransactionDal.Get(t => t.Id == transactionId);
             if (transaction != null)
             {
+                var book = _bookDal.Get(b => b.Id == transaction.BookId);
+                if (book != null && book.Status == false)
+                {
+                    throw new Exception("Hata: Bu kitap sistemde pasif duruma alındığı için talebi onaylayamazsınız!");
+                }
+
+                var user = _userService.GetById(transaction.UserId);
+                int maxLimit = 5;
+
+                if (user != null)
+                {
+                    if (user.TrustScore >= 100) maxLimit = 10;
+                    else if (user.TrustScore >= 50) maxLimit = 7;
+                }
+
                 var activeBooksCount = _bookTransactionDal.GetAll(t =>
                     t.UserId == transaction.UserId &&
                     (t.Status == "Approved" || t.Status == "Overdue")
                 ).Count;
 
-                if (activeBooksCount >= 5)
+                if (activeBooksCount >= maxLimit)
                 {
-                    throw new Exception("Öğrencinin elinde zaten 5 adet aktif/gecikmiş kitap var, limit dolu olduğu için daha fazla onay verilemez!");
+                    throw new Exception($"Öğrencinin elinde zaten {activeBooksCount} adet aktif/gecikmiş kitap var. Güven puanına göre ({maxLimit} limit) daha fazla onay verilemez!");
                 }
 
                 transaction.Status = "Approved";
@@ -112,6 +146,25 @@ namespace Business.Concrete
                 transaction.Status = "Returned";
                 transaction.ReturnDate = DateTime.Now;
                 _bookTransactionDal.Update(transaction);
+
+                var user = _userService.GetById(transaction.UserId);
+                if (user != null)
+                {
+                    if (transaction.ReturnDate <= transaction.DueDate)
+                    {
+                        if (user.PenaltyScore > 0)
+                        {
+                            user.PenaltyScore -= 5;
+                            if (user.PenaltyScore < 0) user.PenaltyScore = 0;
+                        }
+                        else
+                        {
+                            user.TrustScore += 5;
+                            if (user.TrustScore > 100) user.TrustScore = 100;
+                        }
+                        _userService.Update(user);
+                    }
+                }
             }
         }
 
@@ -132,6 +185,25 @@ namespace Business.Concrete
                 transaction.Status = "Returned";
                 transaction.ReturnDate = DateTime.Now;
                 _bookTransactionDal.Update(transaction);
+
+                var user = _userService.GetById(transaction.UserId);
+                if (user != null)
+                {
+                    if (transaction.ReturnDate <= transaction.DueDate)
+                    {
+                        if (user.PenaltyScore > 0)
+                        {
+                            user.PenaltyScore -= 5;
+                            if (user.PenaltyScore < 0) user.PenaltyScore = 0;
+                        }
+                        else
+                        {
+                            user.TrustScore += 5;
+                            if (user.TrustScore > 100) user.TrustScore = 100;
+                        }
+                        _userService.Update(user);
+                    }
+                }
             }
             else
             {

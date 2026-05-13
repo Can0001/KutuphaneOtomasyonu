@@ -3,10 +3,11 @@ using Entities.Concrete;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization; 
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using System.Linq;
 
 namespace WebAPI.Controllers
 {
@@ -16,11 +17,13 @@ namespace WebAPI.Controllers
     {
         private readonly IBookService _bookService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IBookTransactionService _transactionService;
 
-        public BooksController(IBookService bookService, IWebHostEnvironment webHostEnvironment)
+        public BooksController(IBookService bookService, IWebHostEnvironment webHostEnvironment, IBookTransactionService transactionService)
         {
             _bookService = bookService;
             _webHostEnvironment = webHostEnvironment;
+            _transactionService = transactionService;
         }
 
         [HttpGet("getall")]
@@ -35,6 +38,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("add")]
+        [Authorize(Roles = "Admin,Personel")] 
         public async Task<IActionResult> Add([FromForm] BookAddDto bookDto)
         {
             string? imagePath = null;
@@ -59,6 +63,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPut("update")]
+        [Authorize(Roles = "Admin,Personel")] 
         public async Task<IActionResult> Update([FromForm] BookUpdateDto bookDto)
         {
             var existingBook = _bookService.GetById(bookDto.Id);
@@ -78,7 +83,36 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Eser başarıyla güncellendi." });
         }
 
+        [HttpPost("changestatus")]
+        [Authorize(Roles = "Admin,Personel")] 
+        public IActionResult ChangeStatus(int id)
+        {
+            try
+            {
+                var book = _bookService.GetById(id);
+                if (book == null) return NotFound("Kitap bulunamadı!");
+
+                var isBorrowed = _transactionService.GetAll()
+                    .Any(t => t.BookId == id && (t.Status == "Approved" || t.Status == "Overdue"));
+
+                if (isBorrowed)
+                {
+                    return BadRequest("Hata: Bu kitap şu an bir öğrencide ödünçte veya gecikmiş durumda olduğu için pasife alınamaz!");
+                }
+
+                book.Status = !book.Status;
+                _bookService.Update(book);
+
+                return Ok(new { message = "Kitap durumu güncellendi!", newStatus = book.Status });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPost("borrow/{id}")]
+        [Authorize(Roles = "Admin,Personel")]
         public IActionResult Borrow(int id, [FromBody] BorrowRequest request)
         {
             try
@@ -93,6 +127,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("return/{id}")]
+        [Authorize(Roles = "Admin,Personel")]
         public IActionResult Return(int id)
         {
             _bookService.ReturnBook(id);
@@ -100,10 +135,19 @@ namespace WebAPI.Controllers
         }
 
         [HttpDelete("delete/{id}")]
+        [Authorize(Roles = "Admin")] 
         public IActionResult Delete(int id)
         {
             var book = _bookService.GetById(id);
             if (book == null) return NotFound("Silinecek eser bulunamadı.");
+
+            var isBorrowed = _transactionService.GetAll()
+                .Any(t => t.BookId == id && (t.Status == "Approved" || t.Status == "Overdue"));
+
+            if (isBorrowed)
+            {
+                return BadRequest("Hata: Bu kitap şu an bir öğrencide olduğu için sistemden silinemez! Önce iade alınmalıdır.");
+            }
 
             try
             {
@@ -134,7 +178,6 @@ namespace WebAPI.Controllers
             return "/images/" + fileName;
         }
     }
-
 
     public class BorrowRequest
     {
