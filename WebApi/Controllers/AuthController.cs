@@ -6,7 +6,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System;
-
+using System.Security.Cryptography; 
 namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
@@ -14,7 +14,7 @@ namespace WebApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IUserService _userService; // Sadece UserService var
+        private readonly IUserService _userService;
 
         public AuthController(IAuthService authService, IUserService userService)
         {
@@ -37,20 +37,19 @@ namespace WebApi.Controllers
         [HttpPost("login")]
         public IActionResult Login(UserForLoginDto userForLoginDto)
         {
-            // 1. Kullanıcıyı bul (Öğrenci veya Admin fark etmez, hepsi User tablosunda)
             var user = _userService.GetByMail(userForLoginDto.Email);
             if (user == null)
             {
                 return BadRequest("Kullanıcı bulunamadı!");
             }
 
-            // 2. Şifre kontrolü
-            if (user.PasswordHash != userForLoginDto.Password)
+            string hashedInputPassword = CreatePasswordHash(userForLoginDto.Password);
+
+            if (user.PasswordHash != hashedInputPassword)
             {
-                return BadRequest("Parola hatası!");
+                return BadRequest("Erişim Reddedildi: Parola hatası!");
             }
 
-            // 3. Herkes İçin Ortak Token Üretimi
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes("KutuphaneOtomasyonu_Icin_Kirilamaz_Gizli_Anahtar_2026!?*");
 
@@ -61,7 +60,7 @@ namespace WebApi.Controllers
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
-                    new Claim(ClaimTypes.Role, user.Role) // Next.js'in menü gizlemek için kullanacağı sütun!
+                    new Claim(ClaimTypes.Role, user.Role) 
                 }),
                 Expires = DateTime.UtcNow.AddHours(4),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
@@ -71,12 +70,25 @@ namespace WebApi.Controllers
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            // Başarılı girişte Token ve Rol bilgisi dönüyor
             return Ok(new
             {
                 Token = tokenHandler.WriteToken(token),
                 User = user
             });
+        }
+
+        private string CreatePasswordHash(string password)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
         }
     }
 }

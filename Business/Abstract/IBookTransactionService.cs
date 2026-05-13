@@ -16,5 +16,8 @@ namespace Business.Abstract
         void RequestBook(BookTransaction bookTransaction);
         void ApproveRequest(int transactionId);
         void RejectRequest(int transactionId);
+        void ReturnBook(int transactionId);
+        List<BookTransaction> GetByUserId(int userId);
+        void ReturnByBookId(int bookId);
     }
 }

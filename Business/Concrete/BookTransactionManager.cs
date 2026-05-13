@@ -97,5 +97,37 @@ namespace Business.Concrete
                 _bookTransactionDal.Update(transaction);
             }
         }
+
+        public void ReturnBook(int transactionId)
+        {
+            var transaction = _bookTransactionDal.Get(t => t.Id == transactionId);
+            if (transaction != null)
+            {
+                transaction.Status = "Returned"; 
+                transaction.ReturnDate = DateTime.Now; 
+                _bookTransactionDal.Update(transaction);
+
+            }
+        }
+
+        public List<BookTransaction> GetByUserId(int userId)
+        {
+            return _bookTransactionDal.GetAll(t => t.UserId == userId);
+        }
+
+        public void ReturnByBookId(int bookId)
+        {
+            var transaction = _bookTransactionDal.Get(t => t.BookId == bookId && t.Status == "Approved");
+            if (transaction != null)
+            {
+                transaction.Status = "Returned"; 
+                transaction.ReturnDate = DateTime.Now;
+                _bookTransactionDal.Update(transaction);
+            }
+            else
+            {
+                throw new Exception("Bu kitap şu an kimseye ödünç verilmemiş veya zaten iade edilmiş!");
+            }
+        }
     }
 }

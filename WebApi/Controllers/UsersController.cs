@@ -2,7 +2,9 @@
 using Entities.Concrete;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Linq; 
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace WebApi.Controllers
 {
@@ -27,8 +29,20 @@ namespace WebApi.Controllers
         [HttpPost("add")]
         public IActionResult Add(User user)
         {
-            _userService.Add(user);
-            return Ok("Kullanıcı başarıyla sisteme eklendi!");
+            try
+            {
+                if (!string.IsNullOrEmpty(user.PasswordHash))
+                {
+                    user.PasswordHash = CreatePasswordHash(user.PasswordHash);
+                }
+
+                _userService.Add(user);
+                return Ok(new { Message = "Kullanıcı başarıyla sisteme eklendi!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("getstudents")]
@@ -68,5 +82,56 @@ namespace WebApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("update")]
+        public IActionResult Update([FromBody] UserUpdateDto userDto)
+        {
+            try
+            {
+                var existingUser = _userService.GetAll().FirstOrDefault(u => u.Id == userDto.Id);
+
+                if (existingUser == null)
+                {
+                    return BadRequest("Güncellenecek kullanıcı bulunamadı!");
+                }
+
+                existingUser.FirstName = userDto.FirstName;
+                existingUser.LastName = userDto.LastName;
+                existingUser.Email = userDto.Email;
+                existingUser.Role = userDto.Role;
+
+                _userService.Update(existingUser);
+
+                return Ok(new { Message = "Kullanıcı rolü ve bilgileri başarıyla güncellendi!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        private string CreatePasswordHash(string password)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
+
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+    }
+
+    public class UserUpdateDto
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
     }
 }
