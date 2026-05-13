@@ -94,5 +94,55 @@ namespace WebApi.Controllers
             _bookTransactionService.RejectRequest(id);
             return Ok(new { Message = "Öğrencinin kitap talebi reddedildi." });
         }
+
+        [HttpPost("return")]
+        public IActionResult ReturnBook(int id)
+        {
+            try
+            {
+                _bookTransactionService.ReturnBook(id);
+                return Ok(new { Message = "Kitap başarıyla iade alındı!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("getbyuser")]
+        public IActionResult GetByUser(int userId)
+        {
+            var result = _bookTransactionService.GetByUserId(userId);
+            return Ok(result);
+        }
+
+        [HttpPost("returnbybook")]
+        public IActionResult ReturnByBook(int bookId)
+        {
+            try
+            {
+                _bookTransactionService.ReturnByBookId(bookId);
+                return Ok(new { Message = "Kitap başarıyla iade alındı ve rafa eklendi!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost("assignbook")]
+        public IActionResult AssignBook(BookTransaction transaction)
+        {
+            try
+            {
+                transaction.Status = "Approved"; 
+                transaction.TransactionDate = DateTime.Now; 
+                _bookTransactionService.Add(transaction);
+                return Ok(new { Message = "Kitap başarıyla öğrenciye ödünç verildi!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

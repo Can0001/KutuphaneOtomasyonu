@@ -6,7 +6,7 @@ using Business.Concrete;
 using DataAccess.Abstract;
 using DataAccess.Concrete.EntityFramework;
 using Core.Utilities.Security.JWT;
-
+using WebApi.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -28,14 +28,14 @@ builder.Services.AddScoped<IReservationDal, EfReservationDal>();
 // Auth ve Token
 builder.Services.AddScoped<IAuthService, AuthManager>();
 builder.Services.AddScoped<ITokenHelper, JwtHelper>();
-
 builder.Services.AddScoped<ICategoryService, CategoryManager>();
 builder.Services.AddScoped<ICategoryDal, EfCategoryDal>();
-
 builder.Services.AddScoped<IBookTransactionService, BookTransactionManager>();
 builder.Services.AddScoped<IBookTransactionDal, EfBookTransactionDal>();
 
-// --- JWT KÝMLÝK DOÐRULAMA AYARLARI ---
+// Geciken kitaplarý her gün otomatik kontrol eden robotumuz
+builder.Services.AddHostedService<OverdueService>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -71,11 +71,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles(); // wwwroot klasörünü eriþime açar
 app.UseHttpsRedirection();
-
-app.UseCors("AllowAll"); 
-app.UseAuthentication(); 
-app.UseAuthorization();  
-
+app.UseCors("AllowAll");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

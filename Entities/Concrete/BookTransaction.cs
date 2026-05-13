@@ -15,5 +15,6 @@ namespace Entities.Concrete
         public DateTime? ReturnDate { get; set; }
 
         public string Status { get; set; } = string.Empty;
+        public DateTime DueDate { get; set; } 
     }
 }

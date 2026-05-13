@@ -51,7 +51,7 @@ namespace Business.Concrete
             var isAlreadyActive = _bookTransactionDal.Get(t =>
                 t.UserId == bookTransaction.UserId &&
                 t.BookId == bookTransaction.BookId &&
-                (t.Status == "Pending" || t.Status == "Approved")
+                (t.Status == "Pending" || t.Status == "Approved" || t.Status == "Overdue")
             ) != null;
 
             if (isAlreadyActive)
@@ -59,7 +59,10 @@ namespace Business.Concrete
                 throw new Exception("Bu kitap için zaten onay bekleyen bir talebiniz veya aktif olarak ödünç aldığınız bir kaydınız var!");
             }
 
-            var currentBookCount = _bookTransactionDal.GetAll(t => t.UserId == bookTransaction.UserId && (t.Status == "Pending" || t.Status == "Approved")).Count;
+            var currentBookCount = _bookTransactionDal.GetAll(t =>
+                t.UserId == bookTransaction.UserId &&
+                (t.Status == "Pending" || t.Status == "Approved" || t.Status == "Overdue")
+            ).Count;
 
             if (currentBookCount >= 5)
             {
@@ -76,14 +79,17 @@ namespace Business.Concrete
             var transaction = _bookTransactionDal.Get(t => t.Id == transactionId);
             if (transaction != null)
             {
-                var activeBooksCount = _bookTransactionDal.GetAll(t => t.UserId == transaction.UserId && t.Status == "Approved").Count;
+                var activeBooksCount = _bookTransactionDal.GetAll(t =>
+                    t.UserId == transaction.UserId &&
+                    (t.Status == "Approved" || t.Status == "Overdue")
+                ).Count;
 
                 if (activeBooksCount >= 5)
                 {
-                    throw new Exception("Öğrencinin zaten 5 adet aktif kitabı var, limit dolu olduğu için daha fazla onay verilemez!");
+                    throw new Exception("Öğrencinin elinde zaten 5 adet aktif/gecikmiş kitap var, limit dolu olduğu için daha fazla onay verilemez!");
                 }
 
-                transaction.Status = "Approved"; 
+                transaction.Status = "Approved";
                 _bookTransactionDal.Update(transaction);
             }
         }
@@ -93,8 +99,43 @@ namespace Business.Concrete
             var transaction = _bookTransactionDal.Get(t => t.Id == transactionId);
             if (transaction != null)
             {
-                transaction.Status = "Rejected"; 
+                transaction.Status = "Rejected";
                 _bookTransactionDal.Update(transaction);
+            }
+        }
+
+        public void ReturnBook(int transactionId)
+        {
+            var transaction = _bookTransactionDal.Get(t => t.Id == transactionId);
+            if (transaction != null)
+            {
+                transaction.Status = "Returned";
+                transaction.ReturnDate = DateTime.Now;
+                _bookTransactionDal.Update(transaction);
+            }
+        }
+
+        public List<BookTransaction> GetByUserId(int userId)
+        {
+            return _bookTransactionDal.GetAll(t => t.UserId == userId);
+        }
+
+        public void ReturnByBookId(int bookId)
+        {
+            var transaction = _bookTransactionDal.Get(t =>
+                t.BookId == bookId &&
+                (t.Status == "Approved" || t.Status == "Overdue")
+            );
+
+            if (transaction != null)
+            {
+                transaction.Status = "Returned";
+                transaction.ReturnDate = DateTime.Now;
+                _bookTransactionDal.Update(transaction);
+            }
+            else
+            {
+                throw new Exception("Bu kitap şu an kimseye ödünç verilmemiş veya zaten iade edilmiş!");
             }
         }
     }
